@@ -30,21 +30,21 @@ module "rds" {
 
   identifier = "video-processor-users-db-${var.environment}"
 
-  engine                = "postgres"
-  engine_version        = "16"
-  family                = "postgres16"
-  major_engine_version  = "16"
-  instance_class        = "db.t3.micro"
-  allocated_storage      = 20
+  engine               = "postgres"
+  engine_version       = "16"
+  family               = "postgres16"
+  major_engine_version = "16"
+  instance_class       = "db.t3.micro"
+  allocated_storage    = 20
 
   db_name  = "usersdb"
   username = "dbadmin"
 
   manage_master_user_password = true
 
-  multi_az             = false
-  publicly_accessible  = false
-  skip_final_snapshot  = true
+  multi_az            = false
+  publicly_accessible = false
+  skip_final_snapshot = true
 
   create_db_subnet_group = true
   subnet_ids             = data.aws_subnets.private.ids
