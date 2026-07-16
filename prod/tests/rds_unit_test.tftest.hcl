@@ -30,6 +30,16 @@ run "rds_security_group_only_allows_eks_ingress" {
     condition     = anytrue([for r in aws_security_group.rds.ingress : contains(r.security_groups, data.aws_security_group.eks_cluster.id)])
     error_message = "Expected RDS ingress to source only from the EKS cluster security group, not a Lambda SG or 0.0.0.0/0"
   }
+
+  assert {
+    condition     = length(aws_security_group.rds.ingress) == 1
+    error_message = "Expected exactly one ingress rule on the RDS security group"
+  }
+
+  assert {
+    condition     = alltrue([for r in aws_security_group.rds.ingress : length(coalesce(r.cidr_blocks, [])) == 0])
+    error_message = "Expected no CIDR-based ingress on the RDS security group — only the EKS cluster security group should be a source"
+  }
 }
 
 run "rds_identifier_follows_naming_convention" {

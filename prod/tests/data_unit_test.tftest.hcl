@@ -30,4 +30,9 @@ run "cross_repo_lookups_use_expected_tags" {
     condition     = anytrue([for f in data.aws_security_group.eks_cluster.filter : f.name == "tag:aws:eks:cluster-name" && contains(f.values, "video-processor-eks-prod")])
     error_message = "Expected the EKS security group lookup to filter on tag:aws:eks:cluster-name with value video-processor-eks-prod (default environment)"
   }
+
+  assert {
+    condition     = anytrue([for f in data.aws_subnets.private.filter : f.name == "tag:Name" && contains(f.values, "*-private-*")])
+    error_message = "Expected the private subnets lookup to filter on tag:Name with value *-private-*"
+  }
 }
