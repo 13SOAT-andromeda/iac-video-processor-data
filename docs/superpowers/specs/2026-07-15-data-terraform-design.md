@@ -1,10 +1,10 @@
 # Spec — Terraform de `iac-video-processor-data`
 
-**Data:** 2026-07-15 (atualizado 2026-07-16 — colunas novas em `users` para progressive profiling; ADR-011)
+**Data:** 2026-07-15 (atualizado 2026-07-16 — colunas novas em `users` para progressive profiling; ADR-011; atualizado 2026-07-18 — coluna `role` removida do schema de `users`; ADR-012)
 **Status:** Aprovado para virar plano de implementação
 **Spec anterior (draft, parcialmente superada por esta):** `docs/superpowers/specs/2026-07-11-data-design.md`
-**Spec guarda-chuva:** `docs/superpowers/specs/2026-07-11-video-processor-auth-infra-migration-design.md` (workspace raiz), atualizada em 2026-07-16
-**RFCs de origem da atualização 2026-07-16:** `RFC_service-authentication.md`, `RFC_service-users.md` (ADR-011 — signup público + verificação de email + progressive profiling)
+**Spec guarda-chuva:** `docs/superpowers/specs/2026-07-11-video-processor-auth-infra-migration-design.md` (workspace raiz), atualizada em 2026-07-18
+**RFCs de origem da atualização 2026-07-16:** `RFC_service-authentication.md`, `RFC_service-users.md` (ADR-011 — signup público + verificação de email + progressive profiling); reconciliação 2026-07-18 com `RFC_arquitetura-video-processing.md` (ver `docs/superpowers/specs/2026-07-18-notification-signup-integration-design.md`, ADR-012)
 
 ---
 
@@ -104,7 +104,7 @@ Módulo: `terraform-aws-modules/rds/aws ~> 7.2` (confirmado via MCP do Terraform
 
 **Senha do usuário mestre:** gerenciada 100% pela AWS via Secrets Manager (`manage_master_user_password = true`), sem nenhum valor sensível passando pelo Terraform ou pelo `state`. O output `db_instance_master_user_secret_arn` do módulo é reexposto como output deste repo (`rds_master_user_secret_arn`). Acesso local: `aws secretsmanager get-secret-value --secret-id <arn> --query SecretString --output text | jq .` retorna `username`/`password`/`host`/`port`/`dbname` — executado pelo usuário diretamente, nunca pelo agente (ver `aws-core:aws-secrets-manager`: chamadas de `get-secret-value` não devem expor valor em texto puro no contexto do agente).
 
-**Migração de schema (atualizado 2026-07-16 — progressive profiling, ADR-011):** tabela `users` ganha as colunas `phone` e `address` (ambas nullable — preenchidas progressivamente via `PUT /users/me`, não no momento do signup). Schema completo: `id uuid PK`, `name` (nullable), `email unique`, `role`, `phone` (nullable), `address` (nullable), `document` (nullable), `created_at`, `updated_at` — sem `password_hash`. A linha só passa a existir no primeiro `PUT /users/me` do usuário (o signup em `authentication` não grava nada no RDS). Execução da migração continua fora deste repo (roda a partir do `video-processor-users-api`, não do Terraform).
+**Migração de schema (atualizado 2026-07-16 — progressive profiling, ADR-011; atualizado 2026-07-18 — `role` removida, ADR-012; atualizado 2026-07-18 continuação — `phone`/`address` removidas de escopo):** a versão original desta seção previa colunas `phone`/`address` para progressive profiling — **revertido na mesma sessão de brainstorming**: `name`/`email`/`document` (coletados por completo no signup) passam a ser os únicos dados de perfil armazenados; não há mais nenhum dado preenchido progressivamente depois do signup. Schema completo: `id uuid PK`, `name`, `email unique`, `document`, `created_at`, `updated_at` — sem `password_hash`, sem `role` (fica exclusiva em `auth-credentials`/DynamoDB, dono `authentication` — nenhuma rota de `users-api` decide algo com base em `role`, ver ADR-012) e sem `phone`/`address`. A linha é criada **exclusivamente** por um worker de `users-api`, reativamente, a partir do evento `UserSignedUp` publicado por `authentication` no signup (ver `docs/superpowers/specs/2026-07-18-notification-signup-integration-design.md`) — não existe mais nenhuma rota HTTP de criação/edição self-service (`GET/PUT /users/me` foram removidos). Execução da migração continua fora deste repo (roda a partir do `video-processor-users-api`, não do Terraform).
 
 ## 7. DynamoDB
 
