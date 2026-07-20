@@ -1,3 +1,23 @@
+mock_provider "aws" {
+  mock_data "aws_vpc" {
+    defaults = {
+      id = "vpc-0123456789abcdef0"
+    }
+  }
+
+  mock_data "aws_subnets" {
+    defaults = {
+      ids = ["subnet-0123456789abcdef0", "subnet-0123456789abcdef1"]
+    }
+  }
+
+  mock_data "aws_security_group" {
+    defaults = {
+      id = "sg-0123456789abcdef0"
+    }
+  }
+}
+
 run "auth_table_named_per_environment_convention" {
   command = plan
 
