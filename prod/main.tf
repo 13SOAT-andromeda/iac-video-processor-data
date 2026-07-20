@@ -9,7 +9,6 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "video-processor-bucket-andromeda"
     key          = "video-processor-data/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
