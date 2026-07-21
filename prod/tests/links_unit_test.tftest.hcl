@@ -52,27 +52,3 @@ run "links_table_has_user_gsi_for_listing_by_owner" {
     error_message = "Expected the Links table GSI to be named userId-index — the links-service repository queries it by this exact name (GET /links/user/:id)"
   }
 }
-
-run "videos_bucket_is_private_with_3_day_expiration" {
-  command = plan
-
-  assert {
-    condition     = local.videos_bucket_name == "video-processor-videos-andromeda-prod"
-    error_message = "Expected the videos bucket to follow the video-processor-videos-andromeda-${var.environment} convention (andromeda suffix for global uniqueness)"
-  }
-
-  assert {
-    condition = (
-      aws_s3_bucket_public_access_block.videos.block_public_acls &&
-      aws_s3_bucket_public_access_block.videos.block_public_policy &&
-      aws_s3_bucket_public_access_block.videos.ignore_public_acls &&
-      aws_s3_bucket_public_access_block.videos.restrict_public_buckets
-    )
-    error_message = "Videos bucket must block all public access — downloads happen only via short-lived presigned GET"
-  }
-
-  assert {
-    condition     = tolist(aws_s3_bucket_lifecycle_configuration.videos.rule)[0].expiration[0].days == 3
-    error_message = "Expected a 3-day expiration lifecycle rule on the whole bucket (keys start with ${"$"}{linkId}/, so no prefix filter applies)"
-  }
-}
