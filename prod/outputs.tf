@@ -42,13 +42,3 @@ output "link_events_table_arn" {
   description = "ARN of the DynamoDB LinkEvents table"
   value       = module.link_events_table.dynamodb_table_arn
 }
-
-output "videos_bucket_name" {
-  description = "Name of the S3 videos bucket (raw uploads + processed zips, 3-day lifecycle)"
-  value       = aws_s3_bucket.videos.id
-}
-
-output "videos_bucket_arn" {
-  description = "ARN of the S3 videos bucket"
-  value       = aws_s3_bucket.videos.arn
-}
