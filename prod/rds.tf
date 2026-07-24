@@ -53,6 +53,33 @@ module "rds" {
   performance_insights_enabled          = true
   performance_insights_retention_period = 7
 
+  # pg_stat_statements backs Datadog's Database Monitoring (query samples,
+  # per-statement stats). shared_preload_libraries is a static parameter —
+  # takes effect immediately here only because it's set on the parameter
+  # group the instance is *created* with; changing it on an existing
+  # instance needs a reboot (apply_method=pending-reboot below covers that
+  # case too, for future changes).
+  create_db_parameter_group = true
+  parameters = [
+    {
+      name         = "shared_preload_libraries"
+      value        = "pg_stat_statements"
+      apply_method = "pending-reboot"
+    },
+    {
+      name  = "pg_stat_statements.track"
+      value = "all"
+    },
+    {
+      name  = "track_activity_query_size"
+      value = "4096"
+    },
+    {
+      name  = "track_io_timing"
+      value = "1"
+    },
+  ]
+
   create_db_subnet_group = true
   subnet_ids             = data.aws_subnets.private.ids
   vpc_security_group_ids = [aws_security_group.rds.id]
