@@ -46,6 +46,12 @@ module "rds" {
   publicly_accessible = false
   skip_final_snapshot = true
 
+  # Mirrors prod for parity. LocalStack Community emulates the RDS API but
+  # does not actually provision Performance Insights (no real Datadog/AWS
+  # monitoring backend in this environment) - it's a harmless no-op here.
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 7
+
   create_db_subnet_group = true
   subnet_ids             = data.aws_subnets.private.ids
   vpc_security_group_ids = [aws_security_group.rds.id]
